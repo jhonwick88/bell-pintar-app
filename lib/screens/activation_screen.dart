@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../core/api_service.dart';
+import '../core/network_utils.dart';
 import '../providers/app_state.dart';
 
 class ActivationScreen extends StatefulWidget {
@@ -69,26 +70,29 @@ class _ActivationScreenState extends State<ActivationScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                ActionChip(
-                  backgroundColor: const Color(0xFF21262D),
-                  label: const Text('172.16.0.137:8088', style: TextStyle(fontSize: 11, color: Color(0xFF58A6FF))),
-                  onPressed: () => controller.text = 'http://172.16.0.137:8088/api/v1',
-                ),
-                ActionChip(
-                  backgroundColor: const Color(0xFF21262D),
-                  label: const Text('localhost:8088', style: TextStyle(fontSize: 11, color: Color(0xFF8B949E))),
-                  onPressed: () => controller.text = 'http://localhost:8088/api/v1',
-                ),
-                ActionChip(
-                  backgroundColor: const Color(0xFF21262D),
-                  label: const Text('192.168.1.100:8088', style: TextStyle(fontSize: 11, color: Color(0xFF8B949E))),
-                  onPressed: () => controller.text = 'http://192.168.1.100:8088/api/v1',
-                ),
-              ],
+            FutureBuilder<List<String>>(
+              future: NetworkUtils.getLocalIPv4Addresses(),
+              builder: (context, snapshot) {
+                final localIps = snapshot.data ?? [];
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final ip in localIps)
+                      ActionChip(
+                        backgroundColor: const Color(0xFF21262D),
+                        avatar: const Icon(Icons.computer, size: 14, color: Color(0xFF58A6FF)),
+                        label: Text('$ip:8088 (PC Ini)', style: const TextStyle(fontSize: 11, color: Color(0xFF58A6FF), fontWeight: FontWeight.bold)),
+                        onPressed: () => controller.text = 'http://$ip:8088/api/v1',
+                      ),
+                    ActionChip(
+                      backgroundColor: const Color(0xFF21262D),
+                      label: const Text('localhost:8088', style: TextStyle(fontSize: 11, color: Color(0xFF8B949E))),
+                      onPressed: () => controller.text = 'http://localhost:8088/api/v1',
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

@@ -74,6 +74,11 @@ class SchedulesScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Segarkan Jadwal',
+            onPressed: () => state.refreshMenuData(1),
+          ),
+          IconButton(
             icon: const Icon(Icons.copy_rounded),
             tooltip: 'Salin Jadwal dari Hari Lain',
             onPressed: () => _showCopyScheduleDialog(context, state),

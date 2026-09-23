@@ -25,6 +25,12 @@ class _MainLayoutState extends State<MainLayout> {
     AnnouncementsScreen(),
   ];
 
+  void _onDestinationSelected(int index) {
+    setState(() => _currentIndex = index);
+    // Auto-refresh data dari server setiap kali menu diklik
+    context.read<AppState>().refreshMenuData(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 768;
@@ -37,7 +43,7 @@ class _MainLayoutState extends State<MainLayout> {
             NavigationRail(
               backgroundColor: AppTheme.surfaceDark,
               selectedIndex: _currentIndex,
-              onDestinationSelected: (index) => setState(() => _currentIndex = index),
+              onDestinationSelected: _onDestinationSelected,
               extended: MediaQuery.of(context).size.width > 1024,
               minExtendedWidth: 200,
               leading: Padding(
@@ -113,7 +119,7 @@ class _MainLayoutState extends State<MainLayout> {
         backgroundColor: AppTheme.surfaceDark,
         indicatorColor: AppTheme.primaryCyan.withValues(alpha: 0.2),
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        onDestinationSelected: _onDestinationSelected,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.primaryCyan), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.schedule_outlined), selectedIcon: Icon(Icons.schedule, color: AppTheme.primaryCyan), label: 'Jadwal Bel'),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
+import '../core/network_utils.dart';
 
 class PinLoginScreen extends StatefulWidget {
   const PinLoginScreen({super.key});
@@ -17,14 +18,11 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
   String? _errorMessage;
 
   void _onDigitPress(String digit) {
-    if (_enteredPin.length < 6) {
+    if (_enteredPin.length < 8) {
       setState(() {
         _enteredPin += digit;
         _errorMessage = null;
       });
-      if (_enteredPin.length >= 4) {
-        // Auto submit on 4 or 6 digits if common
-      }
     }
   }
 
@@ -142,13 +140,13 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                 // PIN Dots Display
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (index) {
+                  children: List.generate(_enteredPin.length > 6 ? 8 : 6, (index) {
                     final isFilled = index < _enteredPin.length;
                     return Container(
                       key: ValueKey('pin_dot_$index'),
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      width: 16,
-                      height: 16,
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                      width: 14,
+                      height: 14,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isFilled ? AppTheme.primaryCyan : Colors.transparent,
@@ -230,8 +228,8 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildQuickPinChip('Guru Piket (7890)', '7890'),
-                          _buildQuickPinChip('Admin TU (123456)', '123456'),
+                          _buildQuickPinChip('Guru Piket (432234)', '432234'),
+                          _buildQuickPinChip('Admin (741147)', '741147'),
                         ],
                       ),
                     ],
@@ -394,23 +392,27 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: [
-                ActionChip(
-                  label: const Text('172.16.0.137:8088', style: TextStyle(fontSize: 11, color: AppTheme.primaryCyan)),
-                  onPressed: () => controller.text = 'http://172.16.0.137:8088/api/v1',
-                ),
-                ActionChip(
-                  label: const Text('localhost:8088', style: TextStyle(fontSize: 11)),
-                  onPressed: () => controller.text = 'http://localhost:8088/api/v1',
-                ),
-                ActionChip(
-                  label: const Text('192.168.1.100:8088', style: TextStyle(fontSize: 11)),
-                  onPressed: () => controller.text = 'http://192.168.1.100:8088/api/v1',
-                ),
-              ],
+            FutureBuilder<List<String>>(
+              future: NetworkUtils.getLocalIPv4Addresses(),
+              builder: (context, snapshot) {
+                final localIps = snapshot.data ?? [];
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (final ip in localIps)
+                      ActionChip(
+                        avatar: const Icon(Icons.computer, size: 14, color: AppTheme.primaryCyan),
+                        label: Text('$ip:8088 (PC Ini)', style: const TextStyle(fontSize: 11, color: AppTheme.primaryCyan, fontWeight: FontWeight.bold)),
+                        onPressed: () => controller.text = 'http://$ip:8088/api/v1',
+                      ),
+                    ActionChip(
+                      label: const Text('localhost:8088', style: TextStyle(fontSize: 11)),
+                      onPressed: () => controller.text = 'http://localhost:8088/api/v1',
+                    ),
+                  ],
+                );
+              },
             ),
           ],
         ),

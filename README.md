@@ -8,17 +8,19 @@
 Aplikasi ini merupakan antarmuka interaktif bagi guru piket dan staf Tata Usaha (TU) sekolah untuk:
 - **Jadwal & Preset:** Manajemen jadwal bel harian dengan *TimePicker* visual, dukungan pola **5 Hari Sekolah** (Senin–Jumat) & **6 Hari Sekolah** (Senin–Sabtu), duplikasi jadwal, serta tombol *Kosongkan Hari Ini*.
 - **Swipe Action Mobile:** Pada perangkat HP/layar kecil, jadwal dapat digeser ke kanan untuk opsi edit dan hapus yang mulus.
+- **Menu Dotted Terpadu (Mobile):** Pada layar HP kecil, tombol Pengaturan dan Logout disatukan ke dalam *menu titik tiga (dotted popup)* yang ringkas dilengkapi dialog konfirmasi keamanan saat ingin keluar aplikasi.
+- **Deteksi Otomatis IP Komputer (Smart LAN):** Dialog sambungan server LAN otomatis mendeteksi kartu jaringan aktif komputer (Ethernet / Wi-Fi) dan menyediakan pilihan 1-klik `[IP Komputer Ini]:8088` serta `localhost:8088`.
 - **Pustaka Nada (138+ Audio):** Memutar, menguji coba (*Audio Preview*), dan menambah koleksi suara kustom sekolah di menu **Bank Suara** (`.mp3` / `.wav`).
 - **Studio Pengumuman (TTS):** Siaran langsung teks-ke-suara, fitur **Dikte Suara (Speech-to-Text)** tanpa mengetik, serta **CRUD Template Pengumuman Cepat** lengkap dengan pilihan nada chime pembuka.
 - **Remote Mobile & QR Pairing:** Kendali bel jarak jauh via HP Android dengan koneksi LAN/Wi-Fi via Scan QR Code instan (`bellpintar://pair?url=...`).
 - **Pengaturan & Identitas Sekolah:** Konfigurasi nama sekolah resmi, aktivasi lisensi, kontrol jeda relay amplifier, serta riwayat audit log.
-- **About & Kontak Developer:** Bagian profil aplikasi serta tombol langsung chat WhatsApp dan Email ke tim pengembang Pintar Labs.
+- **About & Kontak Developer:** Profil aplikasi terpadu serta tombol langsung chat WhatsApp dan Email ke tim pengembang Pintar Labs.
 
 ---
 
 ## 🔑 Akun & PIN Default
-- **Admin TU:** `123456` *(Akses penuh manajemen jadwal, audio kustom, lisensi, dan pairing perangkat)*
-- **Guru Piket:** `7890` *(Akses pemicu bel darurat, penggantian preset jadwal, dan siaran pengumuman)*
+- **Admin TU:** `741147` *(Akses penuh manajemen jadwal, audio kustom, lisensi, dan pairing perangkat)*
+- **Guru Piket:** `432234` *(Akses pemicu bel darurat, penggantian preset jadwal, dan siaran pengumuman)*
 
 ---
 

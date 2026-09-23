@@ -57,6 +57,11 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: AppTheme.primaryCyan),
+            tooltip: 'Segarkan Dashboard',
+            onPressed: () => state.refreshAll(),
+          ),
           _StatusPill(
             icon: Icons.wifi,
             label: state.isConnected ? 'Online' : 'Offline',

@@ -521,6 +521,31 @@ class AppState extends ChangeNotifier {
     await loadActiveSessions();
   }
 
+  /// Memperbarui data dari server secara otomatis sesuai menu yang sedang diklik/dibuka
+  Future<void> refreshMenuData(int index) async {
+    try {
+      switch (index) {
+        case 0: // Dashboard
+          await refreshAll();
+          break;
+        case 1: // Jadwal Bel
+          presets = await api.getPresets();
+          await loadSchedules();
+          break;
+        case 2: // Bank Suara
+          await loadAudioList();
+          break;
+        case 3: // Pengumuman TTS
+          await loadAnnouncements();
+          await loadAudioList();
+          break;
+        default:
+          await refreshAll();
+          break;
+      }
+    } catch (_) {}
+  }
+
   StreamSubscription<Uri>? _subAppLinks;
   final AppLinks _appLinks = AppLinks();
 

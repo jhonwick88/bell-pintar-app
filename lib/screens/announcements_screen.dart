@@ -724,6 +724,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
         backgroundColor: Colors.transparent,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Segarkan Template',
+            onPressed: () => state.loadAnnouncements(),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Pengaturan',
             onPressed: () => Navigator.push(
