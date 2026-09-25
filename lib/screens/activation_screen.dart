@@ -19,6 +19,15 @@ class _ActivationScreenState extends State<ActivationScreen> {
   String? _localError;
 
   @override
+  void initState() {
+    super.initState();
+    final state = context.read<AppState>();
+    if (state.schoolName.isNotEmpty && state.schoolName != 'Bell Pintar Sekolah') {
+      _schoolController.text = state.schoolName;
+    }
+  }
+
+  @override
   void dispose() {
     _keyController.dispose();
     _schoolController.dispose();

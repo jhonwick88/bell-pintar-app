@@ -983,9 +983,11 @@ class SchedulesScreen extends StatelessWidget {
 
     bool isTestingAudio = false;
     String testStatusMessage = '';
+    bool isSubmitting = false;
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           final currentPreset = _getCurrentPreset(state);
@@ -1110,13 +1112,15 @@ class SchedulesScreen extends StatelessWidget {
                           ),
                         );
                       }),
-                      onChanged: (v) {
-                        if (v != null) {
-                          setModalState(() {
-                            targetDay = v;
-                          });
-                        }
-                      },
+                      onChanged: isSubmitting
+                          ? null
+                          : (v) {
+                              if (v != null) {
+                                setModalState(() {
+                                  targetDay = v;
+                                });
+                              }
+                            },
                     ),
                     if (isTargetDayOff) ...[
                       const SizedBox(height: 6),
@@ -1132,6 +1136,7 @@ class SchedulesScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     TextField(
                       controller: titleCtrl,
+                      enabled: !isSubmitting,
                       decoration: const InputDecoration(
                         hintText: 'Contoh: Masuk Jam Ke-1, Istirahat, Pulang',
                         prefixIcon: Icon(Icons.label_outline_rounded, color: AppTheme.primaryCyan),
@@ -1143,7 +1148,7 @@ class SchedulesScreen extends StatelessWidget {
                     const Text('Waktu Trigger (Jam Berbunyi)', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppTheme.textMuted)),
                     const SizedBox(height: 6),
                     InkWell(
-                      onTap: pickTime,
+                      onTap: isSubmitting ? null : pickTime,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -1175,7 +1180,7 @@ class SchedulesScreen extends StatelessWidget {
                               ),
                             ),
                             OutlinedButton.icon(
-                              onPressed: pickTime,
+                              onPressed: isSubmitting ? null : pickTime,
                               icon: const Icon(Icons.touch_app_rounded, size: 16),
                               label: const Text('Pilih Jam'),
                               style: OutlinedButton.styleFrom(
@@ -1209,12 +1214,14 @@ class SchedulesScreen extends StatelessWidget {
                           ),
                         );
                       }).toList(),
-                      onChanged: (val) {
-                        setModalState(() {
-                          selectedAudioId = val;
-                          testStatusMessage = '';
-                        });
-                      },
+                      onChanged: isSubmitting
+                          ? null
+                          : (val) {
+                              setModalState(() {
+                                selectedAudioId = val;
+                                testStatusMessage = '';
+                              });
+                            },
                     ),
                     const SizedBox(height: 12),
 
@@ -1241,7 +1248,7 @@ class SchedulesScreen extends StatelessWidget {
                                 ),
                               ),
                               ElevatedButton.icon(
-                                onPressed: selectedAudioId == null
+                                onPressed: (selectedAudioId == null || isTestingAudio || isSubmitting)
                                     ? null
                                     : () async {
                                         setModalState(() {
@@ -1287,41 +1294,82 @@ class SchedulesScreen extends StatelessWidget {
             actionsPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(ctx),
+                onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
                 child: const Text('Batal', style: TextStyle(color: AppTheme.textMuted)),
               ),
               ElevatedButton.icon(
-                onPressed: () async {
-                  if (titleCtrl.text.trim().isEmpty || timeCtrl.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Harap isi nama bel dan waktu trigger')),
-                    );
-                    return;
-                  }
-                  final scaffoldCtx = Navigator.of(ctx);
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        if (titleCtrl.text.trim().isEmpty || timeCtrl.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Harap isi nama bel dan waktu trigger'),
+                              backgroundColor: AppTheme.accentGold,
+                            ),
+                          );
+                          return;
+                        }
 
-                  if (isEdit) {
-                    await state.api.updateSchedule(item['id'], {
-                      'day_of_week': targetDay,
-                      'time_trigger': timeCtrl.text.trim(),
-                      'title': titleCtrl.text.trim(),
-                      'audio_file_id': selectedAudioId,
-                    });
-                  } else {
-                    await state.api.createSchedule({
-                      'preset_id': state.selectedPresetId ?? int.tryParse(state.activePresetId) ?? 1,
-                      'day_of_week': targetDay,
-                      'time_trigger': timeCtrl.text.trim(),
-                      'title': titleCtrl.text.trim(),
-                      'audio_file_id': selectedAudioId,
-                    });
-                  }
-                  scaffoldCtx.pop();
-                  // Arahkan tampilan hari ke targetDay yang baru saja ditambahkan
-                  state.setSelectedDay(targetDay);
-                },
-                icon: const Icon(Icons.check_rounded, size: 18),
-                label: Text(isEdit ? 'Simpan Perubahan' : 'Simpan Jadwal'),
+                        setModalState(() => isSubmitting = true);
+
+                        try {
+                          if (isEdit) {
+                            await state.api.updateSchedule(item['id'], {
+                              'day_of_week': targetDay,
+                              'time_trigger': timeCtrl.text.trim(),
+                              'title': titleCtrl.text.trim(),
+                              'audio_file_id': selectedAudioId,
+                            });
+                          } else {
+                            await state.api.createSchedule({
+                              'preset_id': state.selectedPresetId ?? int.tryParse(state.activePresetId) ?? 1,
+                              'day_of_week': targetDay,
+                              'time_trigger': timeCtrl.text.trim(),
+                              'title': titleCtrl.text.trim(),
+                              'audio_file_id': selectedAudioId,
+                            });
+                          }
+
+                          if (ctx.mounted) {
+                            Navigator.of(ctx).pop();
+                          }
+
+                          // Reload & arahkan tampilan hari ke targetDay
+                          await state.setSelectedDay(targetDay);
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(isEdit ? 'Jadwal bel berhasil diperbarui!' : 'Jadwal bel berhasil ditambahkan!'),
+                                backgroundColor: AppTheme.successGreen,
+                              ),
+                            );
+                          }
+                        } catch (err) {
+                          setModalState(() => isSubmitting = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Gagal menyimpan jadwal: $err'),
+                                backgroundColor: AppTheme.errorRed,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                icon: isSubmitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.check_rounded, size: 18),
+                label: Text(
+                  isSubmitting
+                      ? 'Menyimpan...'
+                      : (isEdit ? 'Simpan Perubahan' : 'Simpan Jadwal'),
+                ),
               ),
             ],
           );

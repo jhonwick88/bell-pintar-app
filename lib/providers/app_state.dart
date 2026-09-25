@@ -17,6 +17,7 @@ class AppState extends ChangeNotifier {
   bool isLicenseActive = false;
   bool isServerReachable = true;
   Map<String, dynamic>? licenseInfo;
+  String schoolName = 'Bell Pintar Sekolah';
   String hardwareId = '';
   double ttsSpeed = 1.0;
 
@@ -73,6 +74,12 @@ class AppState extends ChangeNotifier {
       api.setToken(token);
     }
 
+    final cachedSchool = prefs.getString('cached_school_name');
+    if (cachedSchool != null && cachedSchool.isNotEmpty) {
+      schoolName = cachedSchool;
+      settings['school_name'] = cachedSchool;
+    }
+
     _initDeepLinks();
     await checkLicense();
     _startClockTimer();
@@ -99,6 +106,12 @@ class AppState extends ChangeNotifier {
       final ping = await api.ping();
       isConnected = ping['status'] == 'online';
       edition = ping['edition'] ?? 'PRO';
+      if (ping['school_name'] != null && ping['school_name'].toString().isNotEmpty) {
+        schoolName = ping['school_name'].toString();
+        settings['school_name'] = schoolName;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_school_name', schoolName);
+      }
 
       final dash = await api.getDashboardStatus();
       activePresetId = dash['active_preset_id']?.toString() ?? '1';
@@ -117,9 +130,14 @@ class AppState extends ChangeNotifier {
         logs = await api.getLogs();
         if (isAdmin) {
           settings = await api.getSettings();
-      if (settings['tts_speed'] != null) {
-        ttsSpeed = double.tryParse(settings['tts_speed'].toString()) ?? 1.0;
-      }
+          if (settings['school_name'] != null && settings['school_name'].toString().isNotEmpty) {
+            schoolName = settings['school_name'].toString();
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('cached_school_name', schoolName);
+          }
+          if (settings['tts_speed'] != null) {
+            ttsSpeed = double.tryParse(settings['tts_speed'].toString()) ?? 1.0;
+          }
         }
       }
       errorMessage = null;
@@ -167,6 +185,12 @@ class AppState extends ChangeNotifier {
       isServerReachable = true;
       isLicenseActive = res['is_valid'] == true;
       hardwareId = (res['hardware_id'] ?? '').toString();
+      if (res['school_name'] != null && res['school_name'].toString().isNotEmpty) {
+        schoolName = res['school_name'].toString();
+        settings['school_name'] = schoolName;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_school_name', schoolName);
+      }
     } catch (e) {
       isServerReachable = false;
       isLicenseActive = false;
@@ -183,6 +207,12 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     try {
       await api.activateLicense(key, schoolName, serverUrl);
+      if (schoolName != null && schoolName.isNotEmpty) {
+        this.schoolName = schoolName;
+        settings['school_name'] = schoolName;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_school_name', schoolName);
+      }
       await checkLicense();
       return isLicenseActive;
     } catch (e) {
@@ -208,6 +238,7 @@ class AppState extends ChangeNotifier {
     api.setToken(null);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    settings['school_name'] = schoolName;
     notifyListeners();
   }
 

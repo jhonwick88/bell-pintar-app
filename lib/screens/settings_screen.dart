@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/app_state.dart';
 import '../core/theme.dart';
 import '../core/api_service.dart';
@@ -24,7 +25,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     final state = context.read<AppState>();
-    _schoolCtrl.text = state.settings['school_name'] ?? 'SMA Negeri 1 Pintar';
+    final currentSchool = (state.schoolName.isNotEmpty && state.schoolName != 'Bell Pintar Sekolah')
+        ? state.schoolName
+        : (state.settings['school_name']?.toString() ?? 'SMA Negeri 1 Pintar');
+    _schoolCtrl.text = currentSchool;
   }
 
   @override
@@ -41,8 +45,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final newSettings = Map<String, dynamic>.from(state.settings);
-      newSettings['school_name'] = _schoolCtrl.text.trim();
+      final schoolText = _schoolCtrl.text.trim();
+      newSettings['school_name'] = schoolText;
       await state.api.saveSettings(newSettings.map((k, v) => MapEntry(k, v.toString())));
+
+      state.schoolName = schoolText;
+      state.settings['school_name'] = schoolText;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('cached_school_name', schoolText);
+
       await state.refreshAll();
       messenger.showSnackBar(const SnackBar(content: Text('Pengaturan berhasil disimpan!')));
     } catch (e) {

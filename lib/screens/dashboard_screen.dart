@@ -192,10 +192,35 @@ class SingleViewDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final displaySchool = (state.schoolName.isNotEmpty && state.schoolName != 'Bell Pintar Sekolah')
+        ? state.schoolName
+        : (state.settings['school_name']?.toString() ?? '');
 
     return ListView(
       padding: EdgeInsets.all(isMobile ? 16 : 24),
       children: [
+        if (displaySchool.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12, left: 4),
+            child: Row(
+              children: [
+                const Icon(Icons.school_rounded, color: AppTheme.accentGold, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    displaySchool,
+                    style: const TextStyle(
+                      color: AppTheme.accentGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 0.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
 
         // Hero Card: Countdown & Next Schedule
         Container(

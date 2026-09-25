@@ -129,6 +129,26 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                     color: Colors.white,
                   ),
                 ),
+                Consumer<AppState>(
+                  builder: (context, state, _) {
+                    final displaySchool = (state.schoolName.isNotEmpty && state.schoolName != 'Bell Pintar Sekolah')
+                        ? state.schoolName
+                        : (state.settings['school_name']?.toString() ?? '');
+                    if (displaySchool.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4, bottom: 2),
+                      child: Text(
+                        displaySchool,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primaryCyan,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  },
+                ),
                 const SizedBox(height: 6),
                 Text(
                   'Masukkan PIN Petugas untuk Membuka Akses',
