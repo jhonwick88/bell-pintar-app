@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -15,6 +16,7 @@ class AnnouncementsScreen extends StatefulWidget {
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _textCtrl = TextEditingController();
+  final FocusNode _textFocusNode = FocusNode();
   bool _isBroadcasting = false;
 
   // Speech-to-Text
@@ -31,40 +33,68 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _initSpeech();
+    
+    // Only init speech_to_text on mobile/web where plugin is supported
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS) {
+      _initSpeech();
+    }
   }
 
-  Future<void> _initSpeech() async {
+  Future<bool> _initSpeech() async {
     try {
       final available = await _speech.initialize(
         onError: (err) {
+          debugPrint('[SPEECH ERROR] ${err.errorMsg} (permanent: ${err.permanent})');
           if (mounted) {
             setState(() => _isListening = false);
+            if (err.permanent) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error input suara: ${err.errorMsg}'),
+                  backgroundColor: AppTheme.errorRed,
+                ),
+              );
+            }
           }
         },
         onStatus: (status) {
+          debugPrint('[SPEECH STATUS] $status');
           if (status == 'done' || status == 'notListening') {
             if (mounted) {
               setState(() => _isListening = false);
             }
           }
         },
+        debugLogging: true,
       );
       if (mounted) {
         setState(() => _speechEnabled = available);
       }
-    } catch (_) {
+      return available;
+    } catch (e) {
+      debugPrint('[SPEECH INIT EXCEPTION] $e');
       if (mounted) {
         setState(() => _speechEnabled = false);
       }
+      return false;
     }
   }
 
   void _toggleListening() async {
+    // Jika berjalan di Windows Desktop / PC
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+      _textFocusNode.requestFocus();
+      _showWindowsDictationDialog(context);
+      return;
+    }
+
     if (_isListening) {
       await _speech.stop();
       if (mounted) {
-        setState(() => _isListening = false);
+        setState(() {
+          _isListening = false;
+          _baseTextBeforeVoice = _textCtrl.text.trim();
+        });
       }
       return;
     }
@@ -82,11 +112,12 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
       await prefs.setBool('mic_permission_notice_agreed', true);
     }
 
-    if (!_speechEnabled) {
-      await _initSpeech();
+    bool isReady = _speechEnabled;
+    if (!isReady) {
+      isReady = await _initSpeech();
     }
 
-    if (!_speechEnabled) {
+    if (!isReady) {
       if (mounted) {
         _showPermissionDeniedDialog(context);
       }
@@ -97,36 +128,51 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
     setState(() => _isListening = true);
 
     try {
-      // Cari locale Bahasa Indonesia jika tersedia di perangkat
-      final locales = await _speech.locales();
-      String localeId = 'id_ID';
-      final hasIndonesian = locales.any((l) => l.localeId.toLowerCase().startsWith('id'));
-      if (!hasIndonesian && locales.isNotEmpty) {
-        final sys = await _speech.systemLocale();
-        localeId = sys?.localeId ?? locales.first.localeId;
+      // Cari locale Bahasa Indonesia jika tersedia di perangkat Android/iOS
+      String? targetLocaleId;
+      try {
+        final locales = await _speech.locales();
+        for (final l in locales) {
+          final idLower = l.localeId.toLowerCase();
+          if (idLower.startsWith('id') || idLower.startsWith('in')) {
+            targetLocaleId = l.localeId;
+            break;
+          }
+        }
+        if (targetLocaleId == null && locales.isNotEmpty) {
+          final sys = await _speech.systemLocale();
+          targetLocaleId = sys?.localeId;
+        }
+      } catch (e) {
+        debugPrint('[SPEECH] Locale detection warning: $e');
       }
 
       await _speech.listen(
         onResult: (result) {
           if (mounted) {
-            setState(() {
-              final recognized = result.recognizedWords;
-              if (_baseTextBeforeVoice.isEmpty) {
-                _textCtrl.text = recognized;
-              } else {
-                _textCtrl.text = '$_baseTextBeforeVoice $recognized';
-              }
-              // Posisikan kursor di akhir teks yang baru diketik otomatis
-              _textCtrl.selection = TextSelection.fromPosition(
-                TextPosition(offset: _textCtrl.text.length),
-              );
-            });
+            final recognized = result.recognizedWords.trim();
+            if (recognized.isNotEmpty) {
+              setState(() {
+                if (_baseTextBeforeVoice.isEmpty) {
+                  _textCtrl.text = recognized;
+                } else {
+                  _textCtrl.text = '$_baseTextBeforeVoice $recognized';
+                }
+                // Posisikan kursor di akhir teks yang baru diketik otomatis
+                _textCtrl.selection = TextSelection.fromPosition(
+                  TextPosition(offset: _textCtrl.text.length),
+                );
+              });
+            }
           }
         },
         listenOptions: SpeechListenOptions(
-          listenMode: ListenMode.dictation,
-          pauseFor: const Duration(seconds: 4),
-          localeId: localeId,
+          listenMode: ListenMode.confirmation,
+          partialResults: true,
+          cancelOnError: false,
+          localeId: targetLocaleId,
+          pauseFor: const Duration(seconds: 5),
+          listenFor: const Duration(seconds: 60),
         ),
       );
     } catch (e) {
@@ -244,6 +290,112 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
     );
   }
 
+  /// Dialog panduan Dikte Suara khusus untuk pengguna Laptop / PC Windows
+  void _showWindowsDictationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF334155)),
+        ),
+        title: const Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Color(0x2600E5FF),
+              radius: 18,
+              child: Icon(Icons.mic_rounded, color: AppTheme.primaryCyan, size: 20),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Dikte Suara di Laptop / PC Windows',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: Container(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Untuk mendiktekan suara di Windows, gunakan fitur Voice Typing bawaan sistem operasi Windows yang sangat akurat dengan dukungan Bahasa Indonesia:',
+                style: TextStyle(fontSize: 13, color: Colors.white70, height: 1.4),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryCyan.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primaryCyan.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.primaryCyan),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.window_rounded, size: 15, color: AppTheme.primaryCyan),
+                          SizedBox(width: 4),
+                          Text(
+                            'Win + H',
+                            style: TextStyle(
+                              color: AppTheme.primaryCyan,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Tekan tombol Windows + huruf H pada keyboard laptop Anda',
+                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '1. Kolom teks pengumuman sudah otomatis aktif.\n2. Tekan Win + H lalu mulai berbicara ke mikrofon laptop.\n3. Ucapan Anda akan langsung terketik secara otomatis ke dalam kotak pesan.',
+                style: TextStyle(fontSize: 12, color: AppTheme.textMuted, height: 1.5),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _textFocusNode.requestFocus();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryCyan,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Siap, Saya Coba Win + H'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Dialog peringatan jika izin mikrofon ditolak oleh sistem Android
   void _showPermissionDeniedDialog(BuildContext context) {
     showDialog(
@@ -280,6 +432,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
     _speech.stop();
     _pulseController.dispose();
     _textCtrl.dispose();
+    _textFocusNode.dispose();
     super.dispose();
   }
 
@@ -798,6 +951,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
                     // Text Field Form Input
                     TextField(
                       controller: _textCtrl,
+                      focusNode: _textFocusNode,
                       maxLines: 4,
                       onChanged: (_) => setState(() {}),
                       decoration: InputDecoration(

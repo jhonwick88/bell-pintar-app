@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +29,23 @@ class ApiService {
         options.headers['X-Device-Id'] = deviceId;
         options.headers['X-Device-Name'] = deviceName;
         options.headers['X-Device-Platform'] = platform;
+
+        if (kDebugMode) {
+          debugPrint('🌐 [REST REQ] ${options.method} ${options.baseUrl}${options.path} | Data: ${options.data}');
+        }
         return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        if (kDebugMode) {
+          debugPrint('✅ [REST RES ${response.statusCode}] ${response.requestOptions.method} ${response.requestOptions.path}');
+        }
+        return handler.next(response);
+      },
+      onError: (DioException e, handler) {
+        debugPrint('❌ [REST ERROR ${e.response?.statusCode ?? "NO_RES"}] ${e.requestOptions.method} ${e.requestOptions.path}');
+        debugPrint('   -> Message: ${e.message}');
+        debugPrint('   -> Response Body: ${e.response?.data}');
+        return handler.next(e);
       },
     ));
   }

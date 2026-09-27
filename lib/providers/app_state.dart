@@ -386,8 +386,14 @@ class AppState extends ChangeNotifier {
       if (newId != null) {
         selectedPresetId = newId;
         selectedDay = 1;
+        try {
+          await api.setActivePreset(newId);
+          activePresetId = newId.toString();
+          activePresetName = name;
+        } catch (_) {}
         final schedRes = await api.getSchedules(presetId: newId, day: 1);
         schedules = schedRes;
+        await refreshAll();
       }
       return res;
     } catch (e) {
