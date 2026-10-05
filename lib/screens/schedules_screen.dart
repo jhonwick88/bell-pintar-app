@@ -1315,14 +1315,14 @@ class SchedulesScreen extends StatelessWidget {
 
                         try {
                           if (isEdit) {
-                            await state.api.updateSchedule(item['id'], {
+                            await state.updateSchedule(item['id'], {
                               'day_of_week': targetDay,
                               'time_trigger': timeCtrl.text.trim(),
                               'title': titleCtrl.text.trim(),
                               'audio_file_id': selectedAudioId,
                             });
                           } else {
-                            await state.api.createSchedule({
+                            await state.createSchedule({
                               'preset_id': state.selectedPresetId ?? int.tryParse(state.activePresetId) ?? 1,
                               'day_of_week': targetDay,
                               'time_trigger': timeCtrl.text.trim(),
@@ -1605,7 +1605,7 @@ class SchedulesScreen extends StatelessWidget {
               Navigator.pop(ctx);
               final id = item['id'];
               if (id != null) {
-                await state.api.deleteSchedule(id);
+                await state.deleteSchedule(id);
                 final presetId = state.selectedPresetId ?? int.tryParse(state.activePresetId) ?? 1;
                 await state.loadSchedules(presetId: presetId, day: state.selectedDay);
                 if (context.mounted) {

@@ -252,6 +252,23 @@ class _PinLoginScreenState extends State<PinLoginScreen> {
                           _buildQuickPinChip('Admin (741147)', '741147'),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      TextButton.icon(
+                        onPressed: () {
+                          context.read<AppState>().enterDemoMode();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('✨ Berhasil masuk ke Mode Demo!'),
+                              backgroundColor: Color(0xFF0D9488),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.rocket_launch_rounded, size: 16, color: Color(0xFF2DD4BF)),
+                        label: const Text(
+                          '🚀 Coba Mode Demo (Tanpa Server)',
+                          style: TextStyle(color: Color(0xFF2DD4BF), fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
                     ],
                   ),
                 ),

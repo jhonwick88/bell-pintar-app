@@ -8,6 +8,8 @@ import 'audio_library_screen.dart';
 import 'announcements_screen.dart';
 import 'settings_screen.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -31,82 +33,155 @@ class _MainLayoutState extends State<MainLayout> {
     context.read<AppState>().refreshMenuData(index);
   }
 
+  Widget _buildDemoBanner(BuildContext context, AppState state) {
+    if (!state.isDemoMode) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF0F766E), Color(0xFF0369A1)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            const Icon(Icons.stars_rounded, color: Colors.amberAccent, size: 20),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'MODE DEMO (Simulasi Interaktif Tanpa Server)',
+                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            InkWell(
+              onTap: () async {
+                final uri = Uri.parse('https://wa.me/6282132935169?text=Halo%20Pintar%20Labs,%20saya%20tertarik%20membeli%20lisensi%20resmi%20Bell%20Pintar.');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amberAccent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.shopping_cart_outlined, size: 13, color: Colors.black),
+                    SizedBox(width: 4),
+                    Text(
+                      'Beli Lisensi Resmi',
+                      style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 18),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: 'Keluar Mode Demo',
+              onPressed: () => state.exitDemoMode(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     final isDesktop = MediaQuery.of(context).size.width > 768;
 
     if (isDesktop) {
       return Scaffold(
-        body: Row(
+        body: Column(
           children: [
-            // Sidebar Navigation for Desktop / Web
-            NavigationRail(
-              backgroundColor: AppTheme.surfaceDark,
-              selectedIndex: _currentIndex,
-              onDestinationSelected: _onDestinationSelected,
-              extended: MediaQuery.of(context).size.width > 1024,
-              minExtendedWidth: 200,
-              leading: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(
-                        'assets/icons/app_icon.png',
-                        width: 36,
-                        height: 36,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => CircleAvatar(
-                          backgroundColor: AppTheme.primaryCyan.withValues(alpha: 0.2),
-                          child: const Icon(Icons.notifications_active, color: AppTheme.primaryCyan),
+            _buildDemoBanner(context, state),
+            Expanded(
+              child: Row(
+                children: [
+                  // Sidebar Navigation for Desktop / Web
+                  NavigationRail(
+                    backgroundColor: AppTheme.surfaceDark,
+                    selectedIndex: _currentIndex,
+                    onDestinationSelected: _onDestinationSelected,
+                    extended: MediaQuery.of(context).size.width > 1024,
+                    minExtendedWidth: 200,
+                    leading: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.asset(
+                              'assets/icons/app_icon.png',
+                              width: 36,
+                              height: 36,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => CircleAvatar(
+                                backgroundColor: AppTheme.primaryCyan.withValues(alpha: 0.2),
+                                child: const Icon(Icons.notifications_active, color: AppTheme.primaryCyan),
+                              ),
+                            ),
+                          ),
+                          if (MediaQuery.of(context).size.width > 1024) ...[
+                            const SizedBox(width: 12),
+                            const Text('BELL PINTAR', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
+                          ],
+                        ],
+                      ),
+                    ),
+                    destinations: const [
+                      NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.primaryCyan), label: Text('Dashboard')),
+                      NavigationRailDestination(icon: Icon(Icons.schedule_outlined), selectedIcon: Icon(Icons.schedule, color: AppTheme.primaryCyan), label: Text('Jadwal Bel')),
+                      NavigationRailDestination(icon: Icon(Icons.library_music_outlined), selectedIcon: Icon(Icons.library_music, color: AppTheme.primaryCyan), label: Text('Bank Suara')),
+                      NavigationRailDestination(icon: Icon(Icons.record_voice_over_outlined), selectedIcon: Icon(Icons.record_voice_over, color: AppTheme.primaryCyan), label: Text('Pengumuman TTS')),
+                    ],
+                    trailing: Expanded(
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryCyan),
+                                tooltip: 'Pengaturan Sistem',
+                                onPressed: () {
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              IconButton(
+                                icon: const Icon(Icons.logout, color: AppTheme.errorRed),
+                                tooltip: 'Logout / Kunci Layar',
+                                onPressed: () => _showLogoutConfirmDialog(context, context.read<AppState>()),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                    if (MediaQuery.of(context).size.width > 1024) ...[
-                      const SizedBox(width: 12),
-                      const Text('BELL PINTAR', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.white)),
-                    ],
-                  ],
-                ),
-              ),
-              destinations: const [
-                NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard, color: AppTheme.primaryCyan), label: Text('Dashboard')),
-                NavigationRailDestination(icon: Icon(Icons.schedule_outlined), selectedIcon: Icon(Icons.schedule, color: AppTheme.primaryCyan), label: Text('Jadwal Bel')),
-                NavigationRailDestination(icon: Icon(Icons.library_music_outlined), selectedIcon: Icon(Icons.library_music, color: AppTheme.primaryCyan), label: Text('Bank Suara')),
-                NavigationRailDestination(icon: Icon(Icons.record_voice_over_outlined), selectedIcon: Icon(Icons.record_voice_over, color: AppTheme.primaryCyan), label: Text('Pengumuman TTS')),
-              ],
-              trailing: Expanded(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryCyan),
-                          tooltip: 'Pengaturan Sistem',
-                          onPressed: () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        IconButton(
-                          icon: const Icon(Icons.logout, color: AppTheme.errorRed),
-                          tooltip: 'Logout / Kunci Layar',
-                          onPressed: () => _showLogoutConfirmDialog(context, context.read<AppState>()),
-                        ),
-                      ],
-                    ),
                   ),
-                ),
+                  const VerticalDivider(thickness: 1, width: 1, color: Color(0xFF334155)),
+                  // Main View Area
+                  Expanded(child: _screens[_currentIndex]),
+                ],
               ),
             ),
-            const VerticalDivider(thickness: 1, width: 1, color: Color(0xFF334155)),
-            // Main View Area
-            Expanded(child: _screens[_currentIndex]),
           ],
         ),
       );
@@ -114,7 +189,12 @@ class _MainLayoutState extends State<MainLayout> {
 
     // Mobile Android Layout with Bottom Navigation (4 spacious tabs)
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: Column(
+        children: [
+          _buildDemoBanner(context, state),
+          Expanded(child: _screens[_currentIndex]),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppTheme.surfaceDark,
         indicatorColor: AppTheme.primaryCyan.withValues(alpha: 0.2),

@@ -340,6 +340,72 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+
+                    // Divider Demo
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: Color(0xFF30363D))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            'ATAU COBA VERSI DEMO',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.1, color: Colors.cyan.withValues(alpha: 0.9)),
+                          ),
+                        ),
+                        const Expanded(child: Divider(color: Color(0xFF30363D))),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Button Demo Mode
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF0D9488), Color(0xFF0284C7)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.cyan.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () {
+                            context.read<AppState>().enterDemoMode();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✨ Berhasil masuk ke Mode Demo! Anda dapat mencoba semua fitur secara mandiri.'),
+                                backgroundColor: Color(0xFF0D9488),
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Coba Mode Demo (Tanpa Server)',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

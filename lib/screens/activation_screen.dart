@@ -516,6 +516,23 @@ class _ActivationScreenState extends State<ActivationScreen> {
                             style: TextStyle(color: Color(0xFF8B949E), fontSize: 12),
                           ),
                         ),
+                        const Text('•', style: TextStyle(color: Color(0xFF484F58))),
+                        TextButton.icon(
+                          onPressed: () {
+                            context.read<AppState>().enterDemoMode();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✨ Berhasil masuk ke Mode Demo!'),
+                                backgroundColor: Color(0xFF0D9488),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.rocket_launch_rounded, size: 16, color: Color(0xFF2DD4BF)),
+                          label: const Text(
+                            'Coba Mode Demo',
+                            style: TextStyle(color: Color(0xFF2DD4BF), fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ],
                     ),
                   ],

@@ -47,7 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final newSettings = Map<String, dynamic>.from(state.settings);
       final schoolText = _schoolCtrl.text.trim();
       newSettings['school_name'] = schoolText;
-      await state.api.saveSettings(newSettings.map((k, v) => MapEntry(k, v.toString())));
+      await state.saveSettings(newSettings.map((k, v) => MapEntry(k, v.toString())));
 
       state.schoolName = schoolText;
       state.settings['school_name'] = schoolText;
