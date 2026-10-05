@@ -944,8 +944,10 @@ class AppState extends ChangeNotifier {
 
   Future<void> testAudio(int audioId) async {
     if (isDemoMode) {
+      final found = audioList.firstWhere((a) => a['id'] == audioId, orElse: () => null);
+      final filePath = found?['file_path'] as String?;
       // Putar suara bel lokal di perangkat saat tes suara di Bank Suara
-      SoundService().playDemoBell(audioId: audioId);
+      SoundService().playDemoBell(audioId: audioId, filePath: filePath);
       return;
     }
     try {
@@ -1100,7 +1102,7 @@ class AppState extends ChangeNotifier {
   }
 
   // Feature getters
-  bool get canCustomAudio => isDemoMode || (licenseInfo?['feat_custom_audio'] == true);
+  bool get canCustomAudio => !isDemoMode && (licenseInfo?['feat_custom_audio'] == true);
   bool get canRemoteMobile => isDemoMode || (licenseInfo?['feat_remote_mobile'] == true);
   int get featMaxDevices => isDemoMode ? 5 : ((licenseInfo?['feat_max_devices'] ?? licenseInfo?['max_devices'] as num?)?.toInt() ?? 1);
   int get maxDevices => featMaxDevices;

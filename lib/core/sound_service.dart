@@ -20,10 +20,19 @@ class SoundService {
     } catch (_) {}
   }
 
-  /// Memutar suara bel dari aset aplikasi (chime, westminster, bell)
-  Future<void> playDemoBell({int? audioId, String? title}) async {
+  /// Memutar suara bel dari aset aplikasi (chime, westminster, bell) atau file lokal perangkat
+  Future<void> playDemoBell({int? audioId, String? title, String? filePath}) async {
     try {
       await _audioPlayer.stop();
+
+      // Jika file berasal dari upload lokal perangkat
+      if (filePath != null && filePath.isNotEmpty) {
+        try {
+          await _audioPlayer.play(DeviceFileSource(filePath));
+          return;
+        } catch (_) {}
+      }
+
       String assetFile = 'audio/bell_sekolah.mp3';
 
       if (audioId == 1) {

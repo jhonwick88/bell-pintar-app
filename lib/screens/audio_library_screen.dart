@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/app_state.dart';
 import '../core/theme.dart';
 import 'settings_screen.dart';
@@ -386,11 +387,81 @@ class _AudioLibraryScreenState extends State<AudioLibraryScreen> {
   }
 
   void _showUploadDialog(BuildContext context, AppState state) {
-    if (!state.canCustomAudio) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Fitur upload audio custom terkunci oleh lisensi (feat_custom_audio).'),
-          backgroundColor: AppTheme.accentGold,
+    if (state.isDemoMode || !state.canCustomAudio) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.surfaceDark,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: const BorderSide(color: Color(0xFF334155)),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.lock_rounded, color: AppTheme.accentGold, size: 24),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Fitur Lisensi Resmi',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentGold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.accentGold.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, color: AppTheme.accentGold, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Upload nada audio custom (.mp3/.wav) hanya dapat digunakan setelah membeli lisensi resmi aplikasi Bell Pintar.',
+                        style: TextStyle(color: Colors.white, fontSize: 12.5, height: 1.35),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Pada Mode Demo ini, Anda dapat mencoba seluruh pustaka 138+ nada bawaan lengkap (Jam ke 1–12, istirahat, lagu wajib nasional, sirine darurat), serta studio penyiaran suara Text-to-Speech AI.',
+                style: TextStyle(color: AppTheme.textMuted, fontSize: 13, height: 1.4),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Tutup', style: TextStyle(color: AppTheme.textMuted)),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final uri = Uri.parse('https://wa.me/6282132935169?text=Halo%20Tim%20Pintar%20Labs,%20saya%20tertarik%20membeli%20lisensi%20resmi%20Bell%20Pintar.');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              icon: const Icon(Icons.shopping_cart_outlined, size: 16),
+              label: const Text('Beli Lisensi Resmi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryCyan,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
         ),
       );
       return;
