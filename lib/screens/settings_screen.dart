@@ -111,17 +111,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 8,
                   children: [
-                    Icon(Icons.record_voice_over_rounded, color: AppTheme.primaryCyan, size: 22),
-                    SizedBox(width: 10),
-                    Text('Pengaturan Suara Pengumuman (TTS)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.record_voice_over_rounded, color: AppTheme.primaryCyan, size: 22),
+                        SizedBox(width: 10),
+                        Text('Pengaturan Suara Pengumuman (TTS)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: state.canTTS ? AppTheme.successGreen.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: state.canTTS ? AppTheme.successGreen : Colors.grey),
+                      ),
+                      child: Text(
+                        state.canTTS ? 'Fitur PRO Aktif' : 'Fitur PRO Terkunci',
+                        style: TextStyle(
+                          color: state.canTTS ? AppTheme.successGreen : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Menggunakan suara resmi Microsoft Andika (Bahasa Indonesia). Atur tempo pengucapan agar terdengar jelas di speaker sekolah.',
-                  style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                  state.canTTS
+                      ? 'Menggunakan suara resmi Microsoft Andika (Bahasa Indonesia). Atur tempo pengucapan agar terdengar jelas di speaker sekolah.'
+                      : 'Fitur Text-to-Speech (TTS) memerlukan lisensi edisi PRO (feat_tts). Pada edisi BASIC, pengumuman disiarkan via audio rekaman manual.',
+                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
                 ),
                 const SizedBox(height: 18),
                 Wrap(
@@ -136,17 +163,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const Text('Kecepatan Suara: ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
                         Text(
                           '${state.ttsSpeed.toStringAsFixed(1)}x ${state.ttsSpeed == 1.0 ? "(Normal)" : state.ttsSpeed < 1.0 ? "(Santai)" : "(Cepat)"}',
-                          style: const TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: state.canTTS ? AppTheme.primaryCyan : Colors.grey, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     OutlinedButton.icon(
-                      onPressed: () => state.broadcastTTS("Uji coba tempo suara Microsoft Andika Bahasa Indonesia."),
+                      onPressed: state.canTTS ? () => state.broadcastTTS("Uji coba tempo suara Microsoft Andika Bahasa Indonesia.") : null,
                       icon: const Icon(Icons.volume_up, size: 16),
                       label: const Text('Uji Suara'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primaryCyan,
-                        side: const BorderSide(color: AppTheme.primaryCyan),
+                        side: BorderSide(color: state.canTTS ? AppTheme.primaryCyan : Colors.grey.shade700),
                       ),
                     ),
                   ],
@@ -158,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   divisions: 9,
                   activeColor: AppTheme.primaryCyan,
                   inactiveColor: Colors.white12,
-                  onChanged: (val) => state.setTtsSpeed(val),
+                  onChanged: state.canTTS ? (val) => state.setTtsSpeed(val) : null,
                 ),
               ],
             ),
@@ -461,6 +488,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     foregroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFF334155)),
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // 6. KONTROL SAKLAR USB RELAY AMPLIFIER (feat_usb_relay)
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.cardDark,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF334155)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 8,
+                  children: [
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.power_rounded, color: AppTheme.accentGold, size: 22),
+                        SizedBox(width: 10),
+                        Text('Kontrol Saklar USB Relay Ampli (PRO)', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: state.canUsbRelay ? AppTheme.successGreen.withValues(alpha: 0.15) : Colors.grey.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: state.canUsbRelay ? AppTheme.successGreen : Colors.grey),
+                      ),
+                      child: Text(
+                        state.canUsbRelay ? 'Fitur PRO Aktif' : 'Fitur PRO Terkunci',
+                        style: TextStyle(
+                          color: state.canUsbRelay ? AppTheme.successGreen : Colors.grey,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  state.canUsbRelay
+                      ? 'Saklar cerdas USB Relay menyalakan amplifier otomatis sebelum bel berbunyi dan mematikannya kembali setelah nada selesai untuk menghemat listrik.'
+                      : 'Fitur kontrol USB Relay memerlukan lisensi edisi PRO (feat_usb_relay). Pada lisensi edisi BASIC, pengeras suara amplifier dioperasikan secara manual.',
+                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 10,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: state.canUsbRelay
+                          ? () async {
+                              try {
+                                final nextPower = !state.isRelayOn;
+                                await state.api.testRelay(nextPower);
+                                state.isRelayOn = nextPower;
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(nextPower ? 'Relay Amplifier Dinyalakan (Power ON)' : 'Relay Amplifier Dimatikan (Power OFF)'),
+                                      backgroundColor: nextPower ? AppTheme.successGreen : Colors.orange,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Gagal memicu relay: $e'), backgroundColor: AppTheme.errorRed),
+                                  );
+                                }
+                              }
+                            }
+                          : null,
+                      icon: Icon(state.isRelayOn ? Icons.power_off_rounded : Icons.power_rounded),
+                      label: Text(state.isRelayOn ? 'Uji Matikan Relay' : 'Uji Nyalakan Relay (Power ON)'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: state.isRelayOn ? Colors.orange : AppTheme.accentGold,
+                        foregroundColor: Colors.black,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

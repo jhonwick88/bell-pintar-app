@@ -441,6 +441,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
     final appState = context.read<AppState>();
     final messenger = ScaffoldMessenger.of(context);
 
+    if (!appState.canTTS) {
+      _showTTSLockedDialog(context);
+      return;
+    }
+
     if (_isListening) {
       await _speech.stop();
       if (mounted) setState(() => _isListening = false);
@@ -469,9 +474,45 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> with SingleTi
     }
   }
 
+  void _showTTSLockedDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: Color(0xFF334155)),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_clock_rounded, color: AppTheme.accentGold),
+            SizedBox(width: 10),
+            Text('Fitur PRO: Text-to-Speech', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: const Text(
+          'Fitur siaran suara Text-to-Speech (TTS) tidak aktif pada paket lisensi sekolah ini (hanya tersedia pada edisi PRO / lisensi berfitur feat_tts).\n\nSilakan hubungi administrator atau penyedia Pintar Labs untuk upgrade lisensi.',
+          style: TextStyle(fontSize: 13, color: AppTheme.textMuted, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup', style: TextStyle(color: AppTheme.primaryCyan, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _triggerQuickAnnouncement(int id, String title) async {
     final state = context.read<AppState>();
     final messenger = ScaffoldMessenger.of(context);
+
+    if (!state.canTTS) {
+      _showTTSLockedDialog(context);
+      return;
+    }
+
     try {
       await state.triggerAnnouncement(id);
       if (mounted) {

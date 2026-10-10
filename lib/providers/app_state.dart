@@ -145,8 +145,11 @@ class AppState extends ChangeNotifier {
       'plan_id': 'DEMO_EDITION',
       'customer_id': 'Pintar Labs Demo Showcase',
       'product_id': 'BELLPINTAR-DEMO',
+      'edition': 'PRO',
       'feat_custom_audio': true,
       'feat_remote_mobile': true,
+      'feat_tts': true,
+      'feat_usb_relay': true,
       'feat_max_devices': 5,
     };
 
@@ -1104,6 +1107,9 @@ class AppState extends ChangeNotifier {
   // Feature getters
   bool get canCustomAudio => !isDemoMode && (licenseInfo?['feat_custom_audio'] == true);
   bool get canRemoteMobile => isDemoMode || (licenseInfo?['feat_remote_mobile'] == true);
+  bool get canTTS => isDemoMode || (licenseInfo?['feat_tts'] == true);
+  bool get canUsbRelay => isDemoMode || (licenseInfo?['feat_usb_relay'] == true);
+  bool get isProEdition => licenseInfo?['edition'] == 'PRO' || canUsbRelay || canTTS;
   int get featMaxDevices => isDemoMode ? 5 : ((licenseInfo?['feat_max_devices'] ?? licenseInfo?['max_devices'] as num?)?.toInt() ?? 1);
   int get maxDevices => featMaxDevices;
 
